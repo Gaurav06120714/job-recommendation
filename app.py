@@ -1,162 +1,135 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import re
-import math
-from collections import Counter
-import matplotlib.pyplot as plt
-import seaborn as sns
+from config import *
+st.set_page_config(layout="wide")
 
-st.set_page_config(page_title="Job Recommendation System", layout="wide")
-
-# =========================================================
-# DATA LOADING
-# =========================================================
+st.markdown("""
+<style>
+body {background-color: #0e1117; color: white;}
+.big-title {font-size:60px; font-weight:bold; text-align:center;}
+.center {text-align:center;}
+.card {
+    background-color:#1c1f26;
+    padding:20px;
+    border-radius:10px;
+    margin:10px 0;
+}
+</style>
+""", unsafe_allow_html=True)
 
 @st.cache_data
-def load_datasets():
-    df1 = pd.read_csv("data/data_cleaned_2021.csv")
-    df2 = pd.read_csv("data/job_market.csv")
-    df3 = pd.read_csv("data/Indian_Fresher_Salary_Skills_2025.csv")
-    return df1, df2, df3
+def load_data():
+    indian = pd.read_csv(INDIAN_DATA)
+    foreign = pd.read_csv(FOREIGN_DATA)
+    market = pd.read_csv(MARKET_DATA)
+    return indian, foreign, market
 
+indian_df, foreign_df, market_df = load_data()
 
-def clean_columns(df):
-    df.columns = df.columns.str.strip().str.lower()
-    return df
+page = st.sidebar.radio("Navigation", ["🏠 Home", "🎓 Student Profile"])
 
-
-def normalize_skills(text):
-    if pd.isna(text):
-        return []
-    text = text.lower()
-    words = re.findall(r'\b[a-zA-Z]+\b', text)
-    return list(set(words))
-
-
-def prepare_jobs(df1, df2):
-    df1 = clean_columns(df1)
-    df2 = clean_columns(df2)
-
-    df1["skills_list"] = df1["job description"].apply(normalize_skills)
-    df2["skills_list"] = df2["skills"].apply(normalize_skills)
-
-    jobs = pd.concat([df1, df2], ignore_index=True)
-    return jobs
-
-
-# =========================================================
-# MATCHING ENGINE
-# =========================================================
-
-def academic_score(cgpa):
-    if cgpa >= 8:
-        return 100
-    elif cgpa >= 7:
-        return 80
-    else:
-        return 60
-
-
-def skill_score(student_skills, job_skills):
-    matches = sum(skill in job_skills for skill in student_skills)
-    return min(matches * 15, 100)
-
-
-def final_match_score(student, job):
-    a_score = academic_score(student["cgpa"])
-    s_score = skill_score(student["skills"], job["skills_list"])
-    score = (0.4 * s_score) + (0.2 * a_score)
-    return round(score, 2)
-
-
-def match_reason(student, job):
-    matched = [s for s in student["skills"] if s in job["skills_list"]]
-    if not matched:
-        return "Few skill overlaps"
-    return "Matched skills: " + ", ".join(matched)
-
-
-def recommend_jobs(student, jobs_df):
-    jobs_df["match_score"] = jobs_df.apply(
-        lambda row: final_match_score(student, row), axis=1
+if page == "🏠 Home":
+    st.markdown('<div class="big-title">AI Job Recommendation System</div>', unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown(
+        "<div class='center'>This system matches your profile with the best companies using intelligent scoring.</div>",
+        unsafe_allow_html=True
     )
-    return jobs_df.sort_values("match_score", ascending=False)
 
+elif page == "🎓 Student Profile":
 
-# =========================================================
-# STUDENT PROFILE FORM
-# =========================================================
+    st.title("Student Information Form")
 
-def student_form():
-    st.sidebar.header("Student Profile")
+    name = st.text_input("Full Name")
+    college = st.text_input("College Name")
+    degree = st.selectbox("Degree", ["B.Tech", "B.Sc", "BCA", "M.Tech"])
+    grad_year = st.number_input("Graduation Year", 2020, 2030)
+    marks = st.slider("Total Percentage", 0, 100)
+    location = st.text_input("Preferred Location")
+    job_title = st.text_input("Preferred Job Role")
+    skills = st.text_area("Your Skills (comma separated)")
+    expected_salary = st.number_input("Expected Salary LPA")
 
-    name = st.sidebar.text_input("Full Name")
-    degree = st.sidebar.selectbox("Degree", ["B.Tech", "B.Sc", "BCA", "MCA"])
-    stream = st.sidebar.selectbox("Stream", ["CSE", "IT", "ECE", "Data Science"])
-    cgpa = st.sidebar.slider("CGPA", 5.0, 10.0, 7.0)
-    city = st.sidebar.text_input("City")
+    if st.button("Find My Jobs"):
 
-    skills = st.sidebar.text_area("Skills (comma separated)")
+        skill_list = [s.strip().lower() for s in skills.split(",")]
 
-    if st.sidebar.button("Find Jobs"):
-        st.session_state["student"] = {
-            "name": name,
-            "degree": degree,
-            "stream": stream,
-            "cgpa": cgpa,
-            "city": city,
-            "skills": [s.strip().lower() for s in skills.split(",")]
-        }
+        def calculate_score(row):
+            score = 0
 
+            if degree.lower() in str(row.get("Degree", "")).lower():
+                score += WEIGHTS["degree"]
 
-# =========================================================
-# VISUALIZATIONS
-# =========================================================
+            if job_title.lower() in str(row.get("Role", "")).lower():
+                score += WEIGHTS["job_title"]
 
-def plot_top_skills(jobs_df):
-    all_skills = []
-    for s in jobs_df["skills_list"]:
-        all_skills.extend(s)
+            job_skills = str(row.get("Skills", "")).lower()
+            match_count = sum(1 for s in skill_list if s in job_skills)
+            skill_score = (match_count / max(len(skill_list),1)) * WEIGHTS["skills"]
+            score += skill_score
 
-    skill_counts = Counter(all_skills).most_common(10)
-    skills, counts = zip(*skill_counts)
+            if location.lower() in str(row.get("City", "")).lower():
+                score += WEIGHTS["location"]
 
-    fig, ax = plt.subplots()
-    sns.barplot(x=list(counts), y=list(skills), ax=ax)
-    st.pyplot(fig)
+            if expected_salary <= row.get("Salary_lpa", 0):
+                score += WEIGHTS["salary"]
 
+            return score
 
-# =========================================================
-# MAIN APP
-# =========================================================
+        indian_df["Score"] = indian_df.apply(calculate_score, axis=1)
+        best_indian = indian_df.sort_values("Score", ascending=False).iloc[0]
 
-st.title("🎯 Smart Job Recommendation System")
+        foreign_df["match"] = foreign_df["Job title"].str.lower().str.contains(job_title.lower(), na=False)
+        best_foreign = foreign_df[foreign_df["match"]].iloc[0] if not foreign_df[foreign_df["match"]].empty else None
 
-df1, df2, df3 = load_datasets()
-jobs_df = prepare_jobs(df1, df2)
+        market_df["match"] = market_df["job title"].str.lower().str.contains(job_title.lower(), na=False)
+        best_market = market_df[market_df["match"]].iloc[0] if not market_df[market_df["match"]].empty else None
 
-student_form()
+        st.markdown("---")
+        st.header("🎯 Recommendation Result")
 
-if "student" in st.session_state:
-    student = st.session_state["student"]
+        st.markdown(f"""
+        <div class="card">
+        <h3>Student Summary</h3>
+        Name: {name} <br>
+        College: {college} <br>
+        Marks: {marks}% <br>
+        Graduation: {grad_year}
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.subheader(f"Top Matches for {student['name']}")
+        st.markdown(f"""
+        <div class="card">
+        <h3>Match Score</h3>
+        <h1>{int(best_indian['Score'])} / 100</h1>
+        </div>
+        """, unsafe_allow_html=True)
 
-    results = recommend_jobs(student, jobs_df)
+        st.markdown(f"""
+        <div class="card">
+        <h3>🇮🇳 Best Indian Company</h3>
+        Company: {best_indian['Company']} <br>
+        Role: {best_indian['Role']} <br>
+        Salary: {best_indian['Salary_lpa']} LPA
+        </div>
+        """, unsafe_allow_html=True)
 
-    # Filters
-    min_score = st.slider("Minimum Match Score", 0, 100, 60)
-    filtered = results[results["match_score"] >= min_score].head(20)
+        if best_foreign is not None:
+            st.markdown(f"""
+            <div class="card">
+            <h3>🌍 Best Foreign Company</h3>
+            Company: {best_foreign['Company name']} <br>
+            Role: {best_foreign['Job title']} <br>
+            Salary: {best_foreign['Salary estimated']}
+            </div>
+            """, unsafe_allow_html=True)
 
-    for _, job in filtered.iterrows():
-        title = job.get("job title", "Job")
-        company = job.get("company name", "N/A")
-        location = job.get("location", "N/A")
-
-        with st.expander(f"{title} | {company} | Score: {job['match_score']}%"):
-            st.write(f"**Location:** {location}")
-            st.write(match_reason(student, job))
-
-    st.subheader("📊 Most Demanded Skills")
-    plot_top_skills(jobs_df)
+        if best_market is not None:
+            st.markdown(f"""
+            <div class="card">
+            <h3>💰 Expected Market Salary</h3>
+            Role: {best_market['job title']} <br>
+            Monthly Salary: {best_market['Monthly salary']}
+            </div>
+            """, unsafe_allow_html=True)
