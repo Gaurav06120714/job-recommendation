@@ -2,5 +2,8 @@ streamlit
 pandas
 numpy
 scikit-learn
+plotly
 matplotlib
 seaborn
+fpdf
+python-dateutil
