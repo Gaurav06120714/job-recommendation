@@ -3,7 +3,7 @@ import pandas as pd
 from config import DATA_PATH, JOB_PATH, SALARY_PATH
 
 st.set_page_config(page_title="Job Recommendation System")
-
+#testing
 st.title("🎯 Job Recommendation for Students")
 
 @st.cache_data
