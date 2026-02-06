@@ -1,3 +1,4 @@
+import re
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -39,7 +40,8 @@ body {background-color: #0e1117; color: white;}
 .big-title {font-size:60px; font-weight:bold; text-align:center; color:#4CAF50;}
 .center {text-align:center; font-size:18px; margin-bottom:30px;}
 .card {
-    background: linear-gradient(135deg, #1c1f26 0%, #2a2d35 100%);
+    background: #ffffff;       
+    color: #000000; 
     padding:25px;
     border-radius:15px;
     margin:15px 0;
@@ -96,7 +98,22 @@ if indian_df is None or foreign_df is None or market_df is None:
     st.stop()
 
 # Navigation
-page = st.sidebar.radio("Navigation", ["🏠 Home", "🎓 Student Profile", "📊 Data Info"])
+# --- Safe page initialization ---
+if "page" not in st.session_state:
+    st.session_state["page"] = "🏠 Home"
+
+# --- Sidebar navigation ---
+pages = ["🏠 Home", "🎓 Student Profile", "📊 Data Info"]
+
+page = st.sidebar.radio(
+    "Navigation",
+    pages,
+    index=pages.index(st.session_state["page"])
+)
+
+st.session_state["page"] = page
+
+
 
 if page == "🏠 Home":
     st.markdown('<div class="big-title">🎯 AI Job Recommendation System</div>', unsafe_allow_html=True)
@@ -111,7 +128,7 @@ if page == "🏠 Home":
     with col1:
         st.markdown("""
         <div class="card">
-        <h3>🇮🇳 Indian Companies</h3>
+        <h3>Indian Companies</h3>
         <p>Get matched with top Indian companies based on your skills, location, and preferences.</p>
         </div>
         """, unsafe_allow_html=True)
@@ -131,6 +148,14 @@ if page == "🏠 Home":
         <p>Understand expected salary ranges for your desired role.</p>
         </div>
         """, unsafe_allow_html=True)
+        st.markdown("<br><br>", unsafe_allow_html=True)
+
+    col_btn = st.columns([3, 2, 3])
+    with col_btn[1]:
+        if st.button("Continue", use_container_width=True):
+            st.session_state.page = "🎓 Student Profile"
+            st.rerun()
+
 
 elif page == "📊 Data Info":
     st.title("📊 Dataset Information")
@@ -157,20 +182,60 @@ elif page == "🎓 Student Profile":
     st.title("🎓 Student Information Form")
     st.markdown("Fill in your details to get personalized job recommendations")
    
-    col1, col2 = st.columns(2)
+    col1, col2,col3 = st.columns(3)
    
     with col1:
+        st.subheader("Personal Information")
         name = st.text_input("Full Name", placeholder="Enter your full name")
+        email = st.text_input("Email Address", placeholder="Enter your email")
+        phone = st.text_input("Phone Number", placeholder="Enter your phone number")
+
         college = st.text_input("College Name", placeholder="Enter your college name")
         degree = st.selectbox("Degree", ["B.Tech", "B.Sc", "BCA", "M.Tech", "MCA", "M.Sc"])
         grad_year = st.number_input("Graduation Year", 2020, 2030, 2025)
-        marks = st.slider("Total Percentage", 0, 100, 75)
-   
+        #marks = st.slider("Total Percentage", 0, 100, 75)
+
     with col2:
+        st.subheader("Professional Profile")
         location = st.text_input("Preferred Location", placeholder="e.g., Bangalore, Mumbai")
         job_title = st.text_input("Preferred Job Role", placeholder="e.g., Software Engineer, Data Analyst")
         skills = st.text_area("Your Skills (comma separated)", placeholder="e.g., Python, Java, SQL, Machine Learning")
         expected_salary = st.number_input("Expected Salary (LPA)", 0.0, 100.0, 5.0, 0.5)
+        #st.markdown("**Work Preferences**")
+
+        work_preference = st.radio(
+            "Preferred Work Type",
+            ["Full Time", "Internship"]
+        )
+    with col3:
+        st.subheader("Educational Background")
+
+        tenth_pct = st.number_input("10th Percentage", 0.0, 100.0, 75.0, 0.1)
+        twelfth_pct = st.number_input("12th Percentage", 0.0, 100.0, 75.0, 0.1)
+
+        edu_degree = st.selectbox(
+            "Degree Type",
+            ["B.Tech", "B.Sc", "M.Tech", "BCA", "MCA", "B.Com"]
+        )
+
+        stream = st.selectbox(
+            "Stream / Branch",
+            ["CSE", "IT", "ECE", "EEE", "Mechanical", "Civil", "Data Science", "AI & ML", "Other"]
+        )
+
+        cgpa = st.number_input(
+            "CGPA / Degree Percentage",
+            0.0, 10.0, 7.5, 0.1
+        )
+        cgpa_pct = cgpa * 10   # 7.5 → 75%
+        marks = (tenth_pct + twelfth_pct + cgpa_pct) / 3
+
+
+    if email and not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        st.warning("Please enter a valid email address")
+
+    if phone and not phone.isdigit():
+        st.warning("Phone number should contain only digits")
    
     st.markdown("---")
    
@@ -317,7 +382,7 @@ elif page == "🎓 Student Profile":
                 if best_indian is not None:
                     st.markdown(f"""
                     <div class="card">
-                    <h3>🇮🇳 Best Indian Company Match</h3>
+                    <h3>Best Indian Company Match</h3>
                     <p><strong>Company:</strong> {safe_get_value(best_indian, ind_company, "N/A")}</p>
                     <p><strong>Role:</strong> {safe_get_value(best_indian, ind_role, "N/A")}</p>
                     <p><strong>Location:</strong> {safe_get_value(best_indian, ind_city, "N/A")}</p>
