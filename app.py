@@ -100,10 +100,10 @@ if indian_df is None or foreign_df is None or market_df is None:
 # Navigation
 # --- Safe page initialization ---
 if "page" not in st.session_state:
-    st.session_state["page"] = "🏠 Home"
+    st.session_state["page"] = "Home"
 
 # --- Sidebar navigation ---
-pages = ["🏠 Home", "🎓 Student Profile", "📊 Data Info"]
+pages = ["Home", "Student Profile", "Data Info"]
 
 page = st.sidebar.radio(
     "Navigation",
@@ -115,8 +115,8 @@ st.session_state["page"] = page
 
 
 
-if page == "🏠 Home":
-    st.markdown('<div class="big-title">🎯 AI Job Recommendation System</div>', unsafe_allow_html=True)
+if page == "Home":
+    st.markdown('<div class="big-title">AI Job Recommendation System</div>', unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown(
         "<div class='center'>Match your profile with the best companies using intelligent scoring.<br>"
@@ -136,7 +136,7 @@ if page == "🏠 Home":
     with col2:
         st.markdown("""
         <div class="card">
-        <h3>🌍 Foreign Opportunities</h3>
+        <h3>Foreign Opportunities</h3>
         <p>Explore international job opportunities that match your profile.</p>
         </div>
         """, unsafe_allow_html=True)
@@ -144,7 +144,7 @@ if page == "🏠 Home":
     with col3:
         st.markdown("""
         <div class="card">
-        <h3>💰 Market Insights</h3>
+        <h3>Market Insights</h3>
         <p>Understand expected salary ranges for your desired role.</p>
         </div>
         """, unsafe_allow_html=True)
@@ -153,12 +153,12 @@ if page == "🏠 Home":
     col_btn = st.columns([3, 2, 3])
     with col_btn[1]:
         if st.button("Continue", use_container_width=True):
-            st.session_state.page = "🎓 Student Profile"
+            st.session_state.page = "Student Profile"
             st.rerun()
 
 
-elif page == "📊 Data Info":
-    st.title("📊 Dataset Information")
+elif page == "Data Info":
+    st.title("Dataset Information")
    
     st.markdown(f"""
     <div class="card">
@@ -178,8 +178,8 @@ elif page == "📊 Data Info":
     with st.expander("View Market Dataset Sample"):
         st.dataframe(market_df.head())
 
-elif page == "🎓 Student Profile":
-    st.title("🎓 Student Information Form")
+elif page == "Student Profile":
+    st.title("Student Information Form")
     st.markdown("Fill in your details to get personalized job recommendations")
    
     col1, col2,col3 = st.columns(3)
@@ -193,7 +193,6 @@ elif page == "🎓 Student Profile":
         college = st.text_input("College Name", placeholder="Enter your college name")
         degree = st.selectbox("Degree", ["B.Tech", "B.Sc", "BCA", "M.Tech", "MCA", "M.Sc"])
         grad_year = st.number_input("Graduation Year", 2020, 2030, 2025)
-        #marks = st.slider("Total Percentage", 0, 100, 75)
 
     with col2:
         st.subheader("Professional Profile")
@@ -201,7 +200,6 @@ elif page == "🎓 Student Profile":
         job_title = st.text_input("Preferred Job Role", placeholder="e.g., Software Engineer, Data Analyst")
         skills = st.text_area("Your Skills (comma separated)", placeholder="e.g., Python, Java, SQL, Machine Learning")
         expected_salary = st.number_input("Expected Salary (LPA)", 0.0, 100.0, 5.0, 0.5)
-        #st.markdown("**Work Preferences**")
 
         work_preference = st.radio(
             "Preferred Work Type",
@@ -227,7 +225,7 @@ elif page == "🎓 Student Profile":
             "CGPA / Degree Percentage",
             0.0, 10.0, 7.5, 0.1
         )
-        cgpa_pct = cgpa * 10   # 7.5 → 75%
+        cgpa_pct = cgpa * 10
         marks = (tenth_pct + twelfth_pct + cgpa_pct) / 3
 
 
@@ -239,9 +237,9 @@ elif page == "🎓 Student Profile":
    
     st.markdown("---")
    
-    if st.button("🔍 Find My Jobs", use_container_width=True):
+    if st.button("Find My Jobs", use_container_width=True):
         if not name or not job_title or not skills:
-            st.warning("⚠️ Please fill in at least Name, Job Role, and Skills to get recommendations.")
+            st.warning("Please fill in at least Name, Job Role, and Skills to get recommendations.")
         else:
             with st.spinner("Analyzing your profile and matching with opportunities..."):
                 # Process skills
@@ -348,7 +346,7 @@ elif page == "🎓 Student Profile":
                
                 # Display results
                 st.markdown("---")
-                st.markdown("<h1 style='text-align:center; color:#4CAF50;'>🎯 Your Personalized Recommendations</h1>", unsafe_allow_html=True)
+                st.markdown("<h1 style='text-align:center; color:#4CAF50;'>Your Personalized Recommendations</h1>", unsafe_allow_html=True)
                 st.markdown("<br>", unsafe_allow_html=True)
                
                 # Student summary
@@ -356,7 +354,7 @@ elif page == "🎓 Student Profile":
                 with col1:
                     st.markdown(f"""
                     <div class="card">
-                    <h3>👤 Student Summary</h3>
+                    <h3>Student Summary</h3>
                     <p><strong>Name:</strong> {name}</p>
                     <p><strong>College:</strong> {college}</p>
                     <p><strong>Degree:</strong> {degree}</p>
@@ -364,7 +362,7 @@ elif page == "🎓 Student Profile":
                     <p><strong>Graduation:</strong> {grad_year}</p>
                     <p><strong>Preferred Location:</strong> {location}</p>
                     <p><strong>Preferred Role:</strong> {job_title}</p>
-                    <p><strong>Expected Salary:</strong> ₹{expected_salary} LPA</p>
+                    <p><strong>Expected Salary:</strong> Rs.{expected_salary} LPA</p>
                     </div>
                     """, unsafe_allow_html=True)
                
@@ -386,7 +384,7 @@ elif page == "🎓 Student Profile":
                     <p><strong>Company:</strong> {safe_get_value(best_indian, ind_company, "N/A")}</p>
                     <p><strong>Role:</strong> {safe_get_value(best_indian, ind_role, "N/A")}</p>
                     <p><strong>Location:</strong> {safe_get_value(best_indian, ind_city, "N/A")}</p>
-                    <p><strong>Salary:</strong> ₹{safe_get_value(best_indian, ind_salary, "N/A")} LPA</p>
+                    <p><strong>Salary:</strong> Rs.{safe_get_value(best_indian, ind_salary, "N/A")} LPA</p>
                     <p><strong>Skills Required:</strong> {safe_get_value(best_indian, ind_skills, "N/A")}</p>
                     <p><strong>Match Score:</strong> {int(best_indian['score'])}/100</p>
                     </div>
@@ -394,11 +392,11 @@ elif page == "🎓 Student Profile":
                    
                     # Show top 5 matches
                     if len(top_indian) > 1:
-                        with st.expander("📋 View More Indian Company Matches"):
+                        with st.expander("View More Indian Company Matches"):
                             for idx, row in top_indian.iloc[1:].iterrows():
                                 st.markdown(f"""
                                 **{safe_get_value(row, ind_company, "N/A")}** - {safe_get_value(row, ind_role, "N/A")}  
-                                Salary: ₹{safe_get_value(row, ind_salary, "N/A")} LPA | Score: {int(row['score'])}/100
+                                Salary: Rs.{safe_get_value(row, ind_salary, "N/A")} LPA | Score: {int(row['score'])}/100
                                 """)
                 else:
                     st.warning("No matching Indian companies found.")
@@ -410,7 +408,7 @@ elif page == "🎓 Student Profile":
                     if best_foreign is not None:
                         st.markdown(f"""
                         <div class="card">
-                        <h3>🌍 Best Foreign Company Match</h3>
+                        <h3>Best Foreign Company Match</h3>
                         <p><strong>Company:</strong> {safe_get_value(best_foreign, for_company, "N/A")}</p>
                         <p><strong>Role:</strong> {safe_get_value(best_foreign, for_role, "N/A")}</p>
                         <p><strong>Location:</strong> {safe_get_value(best_foreign, for_location, "N/A")}</p>
@@ -419,25 +417,25 @@ elif page == "🎓 Student Profile":
                         </div>
                         """, unsafe_allow_html=True)
                     else:
-                        st.info("🌍 No matching foreign companies found for your profile.")
+                        st.info("No matching foreign companies found for your profile.")
                
                 with col2:
                     if best_market is not None:
                         st.markdown(f"""
                         <div class="card">
-                        <h3>💰 Expected Market Salary</h3>
+                        <h3>Expected Market Salary</h3>
                         <p><strong>Role:</strong> {safe_get_value(best_market, mar_role, "N/A")}</p>
-                        <p><strong>Monthly Salary:</strong> ₹{safe_get_value(best_market, mar_salary, "N/A")}</p>
-                        <p><strong>Annual Estimate:</strong> ₹{float(safe_get_value(best_market, mar_salary, 0) or 0) * 12:,.0f}</p>
+                        <p><strong>Monthly Salary:</strong> Rs.{safe_get_value(best_market, mar_salary, "N/A")}</p>
+                        <p><strong>Annual Estimate:</strong> Rs.{float(safe_get_value(best_market, mar_salary, 0) or 0) * 12:,.0f}</p>
                         </div>
                         """, unsafe_allow_html=True)
                     else:
-                        st.info("💰 No market salary data found for your preferred role.")
+                        st.info("No market salary data found for your preferred role.")
                
                 # Skills analysis
                 if best_indian is not None and ind_skills:
                     st.markdown("---")
-                    st.markdown("<h3 style='color:#4CAF50;'>📊 Skills Analysis</h3>", unsafe_allow_html=True)
+                    st.markdown("<h3 style='color:#4CAF50;'>Skills Analysis</h3>", unsafe_allow_html=True)
                    
                     job_skills = str(safe_get_value(best_indian, ind_skills, "")).lower().split(",")
                     job_skills = [s.strip() for s in job_skills if s.strip()]
@@ -447,12 +445,10 @@ elif page == "🎓 Student Profile":
                    
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.success(f"✅ **Matched Skills ({len(matched_skills)}):**")
+                        st.success(f"**Matched Skills ({len(matched_skills)}):**")
                         st.write(", ".join(matched_skills) if matched_skills else "None")
                    
                     with col2:
                         if missing_skills:
-                            st.warning(f"📚 **Skills to Learn ({len(missing_skills)}):**")
+                            st.warning(f"**Skills to Learn ({len(missing_skills)}):**")
                             st.write(", ".join(missing_skills[:5]))
-               
-                st.balloons()
